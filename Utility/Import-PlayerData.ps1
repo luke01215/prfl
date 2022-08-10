@@ -20,6 +20,10 @@ class Position {
     [int]$regularSeasonEnd
     [int]$playoffSeasonEnd
     [int]$totalWeeksOfStats
+    [string]$positionName
+    [string]$teamName
+    [string]$firstName
+    [string]$lastName
     
     Position([string]$rank, [string]$fullPlayerName, [decimal]$points, [decimal]$average, [string]$owner, [int]$byeweek, [int]$salary, [System.Collections.Generic.List[decimal]]$seasonPointList, [int]$regularSeasonEnd, [int]$playoffSeasonEnd, [int]$totalWeeksOfStats) {
         [System.Collections.Generic.List[decimal]]$this.seasonPointList = New-Object -TypeName "System.Collections.Generic.List[decimal]"
@@ -36,6 +40,7 @@ class Position {
         $this.regularSeasonEnd = $regularSeasonEnd
         $this.playoffSeasonEnd = $playoffSeasonEnd
         $this.totalWeeksOfStats = $totalWeeksOfStats
+        $this.parseFullName()
         $this.CalculateRegularSeasonPointList()
         $this.CalculatePlayoffSeasonPointList()
     }
@@ -56,6 +61,19 @@ class Position {
             $list.Add($number)
         }
         $this.playoffSeasonPointList = $list
+    }
+
+    [void] parseFullName() {
+        $tempString = ""
+        $index = $this.fullPlayerName.LastIndexOf(" ")
+        $this.positionName = $this.fullPlayerName.Substring($index + 1)
+        $tempString = $this.fullPlayerName.Substring(0, $index)
+        $index = $tempString.LastIndexOf(" ")
+        $this.teamName = $tempString.Substring($index + 1)
+        $tempString = $tempString.Substring(0, $index)
+        $index = $tempString.LastIndexOf(" ")
+        $this.firstName = $tempString.Substring($index + 1)
+        $this.lastName = $tempString.Substring(0, $index - 1)
     }
 
 }
