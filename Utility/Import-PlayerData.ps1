@@ -71,8 +71,9 @@ try {
         }
         [Position]$positionObj = [Position]::new($position.Rank, $position.Player, $position.Pts, $position.Avg, $position.Status, $position.Bye, $position.Salary, $list, $regularSeasonEnd, $playoffSeasonEnd, $totalWeeksOfStats)
         $positionList.Add($positionObj)
-        Write-Output "Test"
     }
+    Write-Output "Test"
+
 }
 catch {
     Write-Error $_.Exception.Message
