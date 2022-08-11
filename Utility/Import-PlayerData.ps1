@@ -1,5 +1,5 @@
 param (
-     [string]$inputFilePath="C:\LCD\GIT\prfl\2021\"
+     [string]$inputFilePath="G:\GIT\prfl\2021\"
     ,[string]$outputFileName
     ,[int]$regularSeasonEnd=14
     ,[int]$playoffSeasonEnd=17
@@ -55,7 +55,69 @@ class Statistics {
 
 }
 
-class Position {
+class League {
+    [System.Collections.Generic.List[Player]]$qbList
+    [System.Collections.Generic.List[Player]]$rbList
+    [System.Collections.Generic.List[Player]]$wrList
+    [System.Collections.Generic.List[Player]]$teList
+    [System.Collections.Generic.List[Player]]$pkList
+    [System.Collections.Generic.List[Player]]$offList
+    [System.Collections.Generic.List[Player]]$defList
+    [System.Collections.Generic.List[Player]]$stList
+    [System.Collections.Generic.List[Player]]$coachList
+
+    League([System.Collections.Generic.List[Player]]$playerList) {
+        $this.Initialize()
+        foreach($player in $playerList) {
+            switch($Player.PlayerName) {
+                "QB" {
+                    $this.qbList.Add($player) | Out-Null
+                }
+                "RB" {
+                    $this.rbList.Add($player) | Out-Null
+                }
+                "WR" {
+                    $this.wrList.Add($player) | Out-Null
+                }
+                "TE" {
+                    $this.teList.Add($player) | Out-Null
+                }
+                "PK" {
+                    $this.pkList.Add($player) | Out-Null
+                }
+                "Off" {
+                    $this.offList.Add($player) | Out-Null
+                }
+                "Def" {
+                    $this.defList.Add($player) | Out-Null
+                }
+                "ST" {
+                    $this.stList.Add($player) | Out-Null
+                }
+                "Coach" {
+                    $this.coachList.Add($player) | Out-Null
+                }
+                else {
+                    Write-Error "Player[$($player.PlayerName)] not defined in League"
+                }
+            }
+        }
+    }
+
+    [void] Initialize() {
+        $this.qbList = New-Object -TypeName "System.Collections.Generic.List[Player]"
+        $this.rbList = New-Object -TypeName "System.Collections.Generic.List[Player]"
+        $this.wrList = New-Object -TypeName "System.Collections.Generic.List[Player]"
+        $this.teList = New-Object -TypeName "System.Collections.Generic.List[Player]"
+        $this.pkList = New-Object -TypeName "System.Collections.Generic.List[Player]"
+        $this.offList = New-Object -TypeName "System.Collections.Generic.List[Player]"
+        $this.defList = New-Object -TypeName "System.Collections.Generic.List[Player]"
+        $this.stList = New-Object -TypeName "System.Collections.Generic.List[Player]"
+        $this.coachList = New-Object -TypeName "System.Collections.Generic.List[Player]"
+    }
+}
+
+class Player {
     [string]$rank
     [string]$fullPlayerName
     [decimal]$points
@@ -70,7 +132,7 @@ class Position {
     [int]$regularSeasonEnd
     [int]$playoffSeasonEnd
     [int]$totalWeeksOfStats
-    [string]$positionName
+    [string]$playerName
     [string]$teamName
     [string]$firstName
     [string]$lastName
@@ -84,7 +146,7 @@ class Position {
     [decimal]$playoffSeasonStandardDeviation
     [decimal]$totalSeasonStandardDeviation
     
-    Position([string]$rank, [string]$fullPlayerName, [decimal]$points, [decimal]$average, [string]$owner, [int]$byeweek, [int]$salary, [System.Collections.Generic.List[decimal]]$seasonPointList, [int]$regularSeasonEnd, [int]$playoffSeasonEnd, [int]$totalWeeksOfStats) {
+    Player([string]$rank, [string]$fullPlayerName, [decimal]$points, [decimal]$average, [string]$owner, [int]$byeweek, [int]$salary, [System.Collections.Generic.List[decimal]]$seasonPointList, [int]$regularSeasonEnd, [int]$playoffSeasonEnd, [int]$totalWeeksOfStats) {
         [System.Collections.Generic.List[decimal]]$this.seasonPointList = New-Object -TypeName "System.Collections.Generic.List[decimal]"
         [System.Collections.Generic.List[decimal]]$this.regularSeasonPointList = New-Object -TypeName "System.Collections.Generic.List[decimal]"
         [System.Collections.Generic.List[decimal]]$this.playoffSeasonPointList = New-Object -TypeName "System.Collections.Generic.List[decimal]"
@@ -145,7 +207,7 @@ class Position {
     [void] parseFullName() {
         $tempString = ""
         $index = $this.fullPlayerName.LastIndexOf(" ")
-        $this.positionName = $this.fullPlayerName.Substring($index + 1)
+        $this.playerName = $this.fullPlayerName.Substring($index + 1)
         $tempString = $this.fullPlayerName.Substring(0, $index)
         $index = $tempString.LastIndexOf(" ")
         $this.teamName = $tempString.Substring($index + 1)
@@ -173,20 +235,21 @@ class Position {
 }
 
 try {
-    [System.Collections.Generic.List[Position]]$positionList = New-Object -TypeName "System.Collections.Generic.List[Position]"
+    [System.Collections.Generic.List[Player]]$playerList = New-Object -TypeName "System.Collections.Generic.List[Player]"
     $files = Get-ChildItem -Path $inputFilePath -Filter "*.csv"
     foreach ($inputFileName in $files) {
         $file = Import-Csv -LiteralPath $inputFileName
-        foreach($position in $file) {
+        foreach($player in $file) {
             [System.Collections.Generic.List[decimal]]$list = New-Object -TypeName "System.Collections.Generic.List[decimal]"
             for($i = 1; $i -le $totalWeeksOfStats; $i++) {
-                $number = $position.$i
+                $number = $player.$i
                 $list.Add($number)
             }
-            [Position]$positionObj = [Position]::new($position.Rank, $position.Player, $position.Pts, $position.Avg, $position.Status, $position.Bye, $position.Salary, $list, $regularSeasonEnd, $playoffSeasonEnd, $totalWeeksOfStats)
-            $positionList.Add($positionObj)
+            [Player]$playerObj = [Player]::new($player.Rank, $player.Player, $player.Pts, $player.Avg, $player.Status, $player.Bye, $player.Salary, $list, $regularSeasonEnd, $playoffSeasonEnd, $totalWeeksOfStats)
+            $playerList.Add($playerObj)
         }
     }
+    $league = [League]::new($playerList)
     Write-Output "Test"
 
 }
