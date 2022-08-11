@@ -1,5 +1,5 @@
 param (
-     [string]$inputFileName="G:\GIT\prfl\2021\2021_def.csv"
+     [string]$inputFilePath="C:\LCD\GIT\prfl\2021\"
     ,[string]$outputFileName
     ,[int]$regularSeasonEnd=14
     ,[int]$playoffSeasonEnd=17
@@ -10,7 +10,7 @@ class Statistics {
 
     static [decimal] getAverage([System.Collections.Generic.List[decimal]]$list) {
         if ($null -eq $list) {
-            return -1.00
+            return -1.00Path
         }
         elseif ($list.Count -eq 0) {
             return 0.00
@@ -43,8 +43,8 @@ class Statistics {
         foreach ($number in $deviationFromMeanSquaredList) {
             $sumOfSquares = $sumOfSquares + $number
         }
-        $deviationFromMeanList.Clear()
-        $deviationFromMeanSquaredList.Clear()
+        # $deviationFromMeanList.Clear()
+        # $deviationFromMeanSquaredList.Clear()
         return $sumOfSquares / $count
     }
 
@@ -173,20 +173,19 @@ class Position {
 }
 
 try {
-    $hostname = HOSTNAME.EXE
-    if ($hostname -eq "Eggs6") {
-        $inputFileName = "G:\GIT\prfl\2021\2021_def.csv"
-    }
     [System.Collections.Generic.List[Position]]$positionList = New-Object -TypeName "System.Collections.Generic.List[Position]"
-    $file = Import-Csv -LiteralPath $inputFileName
-    foreach($position in $file) {
-        [System.Collections.Generic.List[decimal]]$list = New-Object -TypeName "System.Collections.Generic.List[decimal]"
-        for($i = 1; $i -le $totalWeeksOfStats; $i++) {
-            $number = $position.$i
-            $list.Add($number)
+    $files = Get-ChildItem -Path $inputFilePath -Filter "*.csv"
+    foreach ($inputFileName in $files) {
+        $file = Import-Csv -LiteralPath $inputFileName
+        foreach($position in $file) {
+            [System.Collections.Generic.List[decimal]]$list = New-Object -TypeName "System.Collections.Generic.List[decimal]"
+            for($i = 1; $i -le $totalWeeksOfStats; $i++) {
+                $number = $position.$i
+                $list.Add($number)
+            }
+            [Position]$positionObj = [Position]::new($position.Rank, $position.Player, $position.Pts, $position.Avg, $position.Status, $position.Bye, $position.Salary, $list, $regularSeasonEnd, $playoffSeasonEnd, $totalWeeksOfStats)
+            $positionList.Add($positionObj)
         }
-        [Position]$positionObj = [Position]::new($position.Rank, $position.Player, $position.Pts, $position.Avg, $position.Status, $position.Bye, $position.Salary, $list, $regularSeasonEnd, $playoffSeasonEnd, $totalWeeksOfStats)
-        $positionList.Add($positionObj)
     }
     Write-Output "Test"
 
