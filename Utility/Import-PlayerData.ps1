@@ -1,5 +1,5 @@
 param (
-     [string]$inputFilePath="G:\GIT\prfl\2021\"
+     [string]$inputFilePath="C:\LCD\GIT\prfl\2021\"
     ,[string]$outputFileName
     ,[int]$regularSeasonEnd=14
     ,[int]$playoffSeasonEnd=17
@@ -10,7 +10,7 @@ class Statistics {
 
     static [decimal] getAverage([System.Collections.Generic.List[decimal]]$list) {
         if ($null -eq $list) {
-            return -1.00Path
+            return -1.00
         }
         elseif ($list.Count -eq 0) {
             return 0.00
@@ -53,67 +53,142 @@ class Statistics {
         return [math]::Sqrt($variance)
     }
 
+    static [decimal] getStandardDeviationsFromMean([System.Collections.Generic.List[decimal]]$list, [decimal]$numberOfDeviations) {
+        $standardDeviation = [Statistics]::getStandardDeviation($list)
+        $mean = [Statistics]::getAverage($list)
+        $numOfStandardDeviations = $standardDeviation * $numberOfDeviations
+        return $mean + $numOfStandardDeviations
+    }
+
 }
 
-class League {
-    [System.Collections.Generic.List[Player]]$qbList
-    [System.Collections.Generic.List[Player]]$rbList
-    [System.Collections.Generic.List[Player]]$wrList
-    [System.Collections.Generic.List[Player]]$teList
-    [System.Collections.Generic.List[Player]]$pkList
-    [System.Collections.Generic.List[Player]]$offList
-    [System.Collections.Generic.List[Player]]$defList
-    [System.Collections.Generic.List[Player]]$stList
-    [System.Collections.Generic.List[Player]]$coachList
+class Position {
+    [string]$name
+    [decimal]$average
+    [decimal]$variance
+    [decimal]$standardDeviation
+    [System.Collections.Generic.List[Player]]$playerList
+    [System.Collections.Generic.List[decimal]]$totalPointList
 
-    League([System.Collections.Generic.List[Player]]$playerList) {
+    Position() {
         $this.Initialize()
-        foreach($player in $playerList) {
-            switch($Player.PlayerName) {
-                "QB" {
-                    $this.qbList.Add($player) | Out-Null
-                }
-                "RB" {
-                    $this.rbList.Add($player) | Out-Null
-                }
-                "WR" {
-                    $this.wrList.Add($player) | Out-Null
-                }
-                "TE" {
-                    $this.teList.Add($player) | Out-Null
-                }
-                "PK" {
-                    $this.pkList.Add($player) | Out-Null
-                }
-                "Off" {
-                    $this.offList.Add($player) | Out-Null
-                }
-                "Def" {
-                    $this.defList.Add($player) | Out-Null
-                }
-                "ST" {
-                    $this.stList.Add($player) | Out-Null
-                }
-                "Coach" {
-                    $this.coachList.Add($player) | Out-Null
-                }
-                else {
-                    Write-Error "Player[$($player.PlayerName)] not defined in League"
-                }
+    }
+
+    Position([string]$name) {
+        $this.Initialize()
+        $this.name = $name
+    }
+
+    [void] Initialize() {
+        $this.playerList = New-Object -TypeName "System.Collections.Generic.List[Player]"
+        $this.totalPointList = New-Object -TypeName "System.Collections.Generic.List[decimal]"
+    }
+
+    [void] buildTotalPointList() {
+        foreach($player in $this.playerList) {
+            foreach($i in $player.totalSeasonPointList) {
+                $this.totalPointList.Add($i) | Out-Null
             }
         }
     }
 
+    [void] buildStats() {
+        $this.setPositionAverage()
+        $this.setPositionVariance()
+        $this.setPositionStandardDeviation()
+    }
+
+    [void] setPositionAverage() {
+        $this.average = [Statistics]::getAverage($this.totalPointList)
+    }
+
+    [void] setPositionVariance() {
+        $this.variance = [Statistics]::getVariance($this.totalPointList)
+    }
+
+    [void] setPositionStandardDeviation() {
+        $this.standardDeviation = [Statistics]::getAverage($this.totalPointList)
+    }
+}
+
+class League {
+    [Position]$qbPosition
+    [Position]$rbPosition
+    [Position]$wrPosition
+    [Position]$tePosition
+    [Position]$pkPosition
+    [Position]$offPosition
+    [Position]$defPosition
+    [Position]$stPosition
+    [Position]$coachPosition
+
+    League([System.Collections.Generic.List[Player]]$playerList) {
+        $this.Initialize()
+        foreach($player in $playerList) {
+            switch($Player.positionName) {
+                "QB" {
+                    $this.qbPosition.playerList.Add($player) | Out-Null
+                }
+                "RB" {
+                    $this.rbPosition.playerList.Add($player) | Out-Null
+                }
+                "WR" {
+                    $this.wrPosition.playerList.Add($player) | Out-Null
+                }
+                "TE" {
+                    $this.tePosition.playerList.Add($player) | Out-Null
+                }
+                "PK" {
+                    $this.pkPosition.playerList.Add($player) | Out-Null
+                }
+                "Off" {
+                    $this.offPosition.playerList.Add($player) | Out-Null
+                }
+                "Def" {
+                    $this.defPosition.playerList.Add($player) | Out-Null
+                }
+                "ST" {
+                    $this.stPosition.playerList.Add($player) | Out-Null
+                }
+                "Coach" {
+                    $this.coachPosition.playerList.Add($player) | Out-Null
+                }
+                else {
+                    Write-Error "Position[$($player.positionName)] not defined in League"
+                }
+            }
+        }
+        $this.qbPosition.buildTotalPointList()
+        $this.qbPosition.buildStats()
+        $this.rbPosition.buildTotalPointList()
+        $this.rbPosition.buildStats()
+        $this.wrPosition.buildTotalPointList()
+        $this.wrPosition.buildStats()
+        $this.tePosition.buildTotalPointList()
+        $this.tePosition.buildStats()
+        $this.pkPosition.buildTotalPointList()
+        $this.pkPosition.buildStats()
+        $this.offPosition.buildTotalPointList()
+        $this.offPosition.buildStats()
+        $this.defPosition.buildTotalPointList()
+        $this.defPosition.buildStats()
+        $this.stPosition.buildTotalPointList()
+        $this.stPosition.buildStats()
+        $this.coachPosition.buildTotalPointList()
+        $this.coachPosition.buildStats()
+    }
+
     [void] Initialize() {
-        $this.qbList = New-Object -TypeName "System.Collections.Generic.List[Player]"
-        $this.rbList = New-Object -TypeName "System.Collections.Generic.List[Player]"
-        $this.wrList = New-Object -TypeName "System.Collections.Generic.List[Player]"
-        $this.teList = New-Object -TypeName "System.Collections.Generic.List[Player]"
-        $this.pkList = New-Object -TypeName "System.Collections.Generic.List[Player]"
-        $this.offList = New-Object -TypeName "System.Collections.Generic.List[Player]"
-        $this.defList = New-Object -TypeName "System.Collections.Generic.List[Player]"
-        $this.stList = New-Object -TypeName "System.Collections.Generic.List[Player]"
-        $this.coachList = New-Object -TypeName "System.Collections.Generic.List[Player]"
+        $this.qbPosition = [Position]::new("QB")
+        $this.rbPosition = [Position]::new("RB")
+        $this.wrPosition = [Position]::new("WR")
+        $this.tePosition = [Position]::new("TE")
+        $this.pkPosition = [Position]::new("PK")
+        $this.offPosition = [Position]::new("Off")
+        $this.defPosition = [Position]::new("Def")
+        $this.stPosition = [Position]::new("ST")
+        $this.coachPosition = [Position]::new("Coach")
+
     }
 }
 
@@ -132,7 +207,7 @@ class Player {
     [int]$regularSeasonEnd
     [int]$playoffSeasonEnd
     [int]$totalWeeksOfStats
-    [string]$playerName
+    [string]$positionName
     [string]$teamName
     [string]$firstName
     [string]$lastName
@@ -207,7 +282,7 @@ class Player {
     [void] parseFullName() {
         $tempString = ""
         $index = $this.fullPlayerName.LastIndexOf(" ")
-        $this.playerName = $this.fullPlayerName.Substring($index + 1)
+        $this.positionName = $this.fullPlayerName.Substring($index + 1)
         $tempString = $this.fullPlayerName.Substring(0, $index)
         $index = $tempString.LastIndexOf(" ")
         $this.teamName = $tempString.Substring($index + 1)
