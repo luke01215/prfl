@@ -67,6 +67,12 @@ class Position {
     [decimal]$average
     [decimal]$variance
     [decimal]$standardDeviation
+    [decimal]$oneStandardDeviationFromMean
+    [int]$playerCountThatFallWithinOneSTD
+    [decimal]$twoStandardDeviationsFromMean
+    [int]$playerCountThatFallWithinTwoSTD
+    [decimal]$threeStandardDeviationsFromMean
+    [int]$playerCountThatFallWithinThreeSTD
     [System.Collections.Generic.List[Player]]$playerList
     [System.Collections.Generic.List[decimal]]$totalPointList
 
@@ -82,6 +88,9 @@ class Position {
     [void] Initialize() {
         $this.playerList = New-Object -TypeName "System.Collections.Generic.List[Player]"
         $this.totalPointList = New-Object -TypeName "System.Collections.Generic.List[decimal]"
+        $this.playerCountThatFallWithinOneSTD = 0
+        $this.playerCountThatFallWithinTwoSTD = 0
+        $this.playerCountThatFallWithinThreeSTD = 0
     }
 
     [void] buildTotalPointList() {
@@ -96,6 +105,8 @@ class Position {
         $this.setPositionAverage()
         $this.setPositionVariance()
         $this.setPositionStandardDeviation()
+        $this.setStandardDeviations()
+        $this.setCountThatFallwithinDeviations()
     }
 
     [void] setPositionAverage() {
@@ -107,7 +118,27 @@ class Position {
     }
 
     [void] setPositionStandardDeviation() {
-        $this.standardDeviation = [Statistics]::getAverage($this.totalPointList)
+        $this.standardDeviation = [Statistics]::getStandardDeviation($this.totalPointList)
+    }
+
+    [void] setStandardDeviations() {
+        $this.oneStandardDeviationFromMean = [Statistics]::getStandardDeviationsFromMean($this.totalPointList, 1.00)
+        $this.twoStandardDeviationsFromMean = [Statistics]::getStandardDeviationsFromMean($this.totalPointList, 2.00)
+        $this.threeStandardDeviationsFromMean = [Statistics]::getStandardDeviationsFromMean($this.totalPointList, 3.00)
+    }
+    
+    [void] setCountThatFallwithinDeviations() {
+        foreach($player in $this.playerList) {
+            if($player.totalSeasonAvg -gt $this.oneStandardDeviationFromMean) {
+                $this.playerCountThatFallWithinOneSTD++ 
+            }
+            if($player.totalSeasonAvg -gt $this.twoStandardDeviationsFromMean) {
+                $this.playerCountThatFallWithinTwoSTD++ 
+            }
+            if($player.totalSeasonAvg -gt $this.threeStandardDeviationsFromMean) {
+                $this.playerCountThatFallWithinThreeSTD++ 
+            }
+        }
     }
 }
 
