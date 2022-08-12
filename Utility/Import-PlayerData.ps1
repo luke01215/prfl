@@ -4,6 +4,7 @@ param (
     ,[int]$regularSeasonEnd=14
     ,[int]$playoffSeasonEnd=17
     ,[int]$totalWeeksOfStats=18
+    ,[int]$totalNumberOfTeams=16
 )
 
 class Statistics {
@@ -43,8 +44,6 @@ class Statistics {
         foreach ($number in $deviationFromMeanSquaredList) {
             $sumOfSquares = $sumOfSquares + $number
         }
-        # $deviationFromMeanList.Clear()
-        # $deviationFromMeanSquaredList.Clear()
         return $sumOfSquares / $count
     }
 
@@ -73,21 +72,35 @@ class Position {
     [int]$playerCountThatFallWithinTwoSTD
     [decimal]$threeStandardDeviationsFromMean
     [int]$playerCountThatFallWithinThreeSTD
+
+    [decimal]$restrictedOneStandardDeviationFromMean
+    [int]$restrictedPlayerCountThatFallWithinOneSTD
+    [decimal]$restrictedTwoStandardDeviationsFromMean
+    [int]$restrictedPlayerCountThatFallWithinTwoSTD
+    [decimal]$restrictedThreeStandardDeviationsFromMean
+    [int]$restrictedPlayerCountThatFallWithinThreeSTD
+
     [System.Collections.Generic.List[Player]]$playerList
     [System.Collections.Generic.List[decimal]]$totalPointList
+    [System.Collections.Generic.List[decimal]]$restrictedPointList
+    [int]$numberDrafted
+    [int]$numberStarted
 
     Position() {
         $this.Initialize()
     }
 
-    Position([string]$name) {
+    Position([string]$name, [int]$numberDrafted, [int]$numberStarted) {
         $this.Initialize()
         $this.name = $name
+        $this.numberDrafted = $numberDrafted
+        $this.numberStarted = $numberStarted
     }
 
     [void] Initialize() {
         $this.playerList = New-Object -TypeName "System.Collections.Generic.List[Player]"
         $this.totalPointList = New-Object -TypeName "System.Collections.Generic.List[decimal]"
+        $this.restrictedPointList = New-Object -TypeName "System.Collections.Generic.List[decimal]"
         $this.playerCountThatFallWithinOneSTD = 0
         $this.playerCountThatFallWithinTwoSTD = 0
         $this.playerCountThatFallWithinThreeSTD = 0
@@ -101,32 +114,45 @@ class Position {
         }
     }
 
+    [void] buildRestrictedPointList([int]$numberOfPlayers) {
+        for($i = 0; $i -lt $numberOfPlayers; $i++) {
+            $player = $this.playerList[$i]
+            foreach($j in $player.totalSeasonPointList) {
+                $this.restrictedPointList.Add($j) | Out-Null
+            }
+        }
+    }
+
     [void] buildStats() {
-        $this.setPositionAverage()
-        $this.setPositionVariance()
-        $this.setPositionStandardDeviation()
-        $this.setStandardDeviations()
+        $this.setPositionAverage($this.totalPointList)
+        $this.setPositionVariance($this.totalPointList)
+        $this.setPositionStandardDeviation($this.totalPointList)
+        $this.setStandardDeviations($this.totalPointList)
         $this.setCountThatFallwithinDeviations()
     }
 
-    [void] setPositionAverage() {
-        $this.average = [Statistics]::getAverage($this.totalPointList)
+    [void] setPositionAverage([System.Collections.Generic.List[decimal]]$pointList) {
+        $this.average = [Statistics]::getAverage($pointList)
     }
 
-    [void] setPositionVariance() {
-        $this.variance = [Statistics]::getVariance($this.totalPointList)
+    [void] setPositionVariance([System.Collections.Generic.List[decimal]]$pointList) {
+        $this.variance = [Statistics]::getVariance($pointList)
     }
 
-    [void] setPositionStandardDeviation() {
-        $this.standardDeviation = [Statistics]::getStandardDeviation($this.totalPointList)
+    [void] setPositionStandardDeviation([System.Collections.Generic.List[decimal]]$pointList) {
+        $this.standardDeviation = [Statistics]::getStandardDeviation($pointList)
     }
 
-    [void] setStandardDeviations() {
-        $this.oneStandardDeviationFromMean = [Statistics]::getStandardDeviationsFromMean($this.totalPointList, 1.00)
-        $this.twoStandardDeviationsFromMean = [Statistics]::getStandardDeviationsFromMean($this.totalPointList, 2.00)
-        $this.threeStandardDeviationsFromMean = [Statistics]::getStandardDeviationsFromMean($this.totalPointList, 3.00)
+    [void] setStandardDeviations([System.Collections.Generic.List[decimal]]$pointList) {
+        $this.oneStandardDeviationFromMean = [Statistics]::getStandardDeviationsFromMean($pointList, 1.00)
+        $this.twoStandardDeviationsFromMean = [Statistics]::getStandardDeviationsFromMean($pointList, 2.00)
+        $this.threeStandardDeviationsFromMean = [Statistics]::getStandardDeviationsFromMean($pointList, 3.00)
     }
-    
+
+    [decimal] getStandardDeviations([System.Collections.Generic.List[decimal]]$pointList, [decimal]$distance) {
+        return [Statistics]::getStandardDeviationsFromMean($pointList, $distance)
+    }
+
     [void] setCountThatFallwithinDeviations() {
         foreach($player in $this.playerList) {
             if($player.totalSeasonAvg -gt $this.oneStandardDeviationFromMean) {
@@ -152,9 +178,11 @@ class League {
     [Position]$defPosition
     [Position]$stPosition
     [Position]$coachPosition
+    [int]$totalNumberOfTeams
 
-    League([System.Collections.Generic.List[Player]]$playerList) {
+    League([System.Collections.Generic.List[Player]]$playerList, [int]$totalNumberOfTeams) {
         $this.Initialize()
+        $this.totalNumberOfTeams = $totalNumberOfTeams
         foreach($player in $playerList) {
             switch($Player.positionName) {
                 "QB" {
@@ -190,6 +218,7 @@ class League {
             }
         }
         $this.qbPosition.buildTotalPointList()
+        $this.qbPosition.buildRestrictedPointList($this.totalNumberOfTeams * $this.qbPosition.numberDrafted)
         $this.qbPosition.buildStats()
         $this.rbPosition.buildTotalPointList()
         $this.rbPosition.buildStats()
@@ -210,16 +239,15 @@ class League {
     }
 
     [void] Initialize() {
-        $this.qbPosition = [Position]::new("QB")
-        $this.rbPosition = [Position]::new("RB")
-        $this.wrPosition = [Position]::new("WR")
-        $this.tePosition = [Position]::new("TE")
-        $this.pkPosition = [Position]::new("PK")
-        $this.offPosition = [Position]::new("Off")
-        $this.defPosition = [Position]::new("Def")
-        $this.stPosition = [Position]::new("ST")
-        $this.coachPosition = [Position]::new("Coach")
-
+        $this.qbPosition = [Position]::new("QB", 2, 1)
+        $this.rbPosition = [Position]::new("RB", 4, 2)
+        $this.wrPosition = [Position]::new("WR", 4, 2)
+        $this.tePosition = [Position]::new("TE", 2, 1)
+        $this.pkPosition = [Position]::new("PK", 2, 1)
+        $this.offPosition = [Position]::new("Off", 2, 1)
+        $this.defPosition = [Position]::new("Def", 2, 1)
+        $this.stPosition = [Position]::new("ST", 2, 1)
+        $this.coachPosition = [Position]::new("Coach", 2, 1)
     }
 }
 
@@ -355,7 +383,7 @@ try {
             $playerList.Add($playerObj)
         }
     }
-    $league = [League]::new($playerList)
+    $league = [League]::new($playerList, $totalNumberOfTeams)
     Write-Output "Test"
 
 }
