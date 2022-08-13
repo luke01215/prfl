@@ -85,25 +85,24 @@ class Position {
     [System.Collections.Generic.List[decimal]]$restrictedPointList
     [int]$numberDrafted
     [int]$numberStarted
+    [int]$teamCount
 
     Position() {
         $this.Initialize()
     }
 
-    Position([string]$name, [int]$numberDrafted, [int]$numberStarted) {
+    Position([string]$name, [int]$numberDrafted, [int]$numberStarted, [int]$teamCount) {
         $this.Initialize()
         $this.name = $name
         $this.numberDrafted = $numberDrafted
         $this.numberStarted = $numberStarted
+        $this.teamCount = $teamCount
     }
 
     [void] Initialize() {
         $this.playerList = New-Object -TypeName "System.Collections.Generic.List[Player]"
         $this.totalPointList = New-Object -TypeName "System.Collections.Generic.List[decimal]"
         $this.restrictedPointList = New-Object -TypeName "System.Collections.Generic.List[decimal]"
-        $this.playerCountThatFallWithinOneSTD = 0
-        $this.playerCountThatFallWithinTwoSTD = 0
-        $this.playerCountThatFallWithinThreeSTD = 0
     }
 
     [void] buildTotalPointList() {
@@ -121,6 +120,9 @@ class Position {
                 $this.restrictedPointList.Add($j) | Out-Null
             }
         }
+        $this.restrictedOneStandardDeviationFromMean = $this.getStandardDeviations($this.restrictedPointList, 1.00)
+        $this.restrictedTwoStandardDeviationsFromMean = $this.getStandardDeviations($this.restrictedPointList, 2.00)
+        $this.restrictedThreeStandardDeviationsFromMean = $this.getStandardDeviations($this.restrictedPointList, 3.00)
     }
 
     [void] buildStats() {
@@ -128,6 +130,7 @@ class Position {
         $this.setPositionVariance($this.totalPointList)
         $this.setPositionStandardDeviation($this.totalPointList)
         $this.setStandardDeviations($this.totalPointList)
+        $this.buildRestrictedPointList($this.teamCount * $this.numberDrafted)
         $this.setCountThatFallwithinDeviations()
     }
 
@@ -154,6 +157,13 @@ class Position {
     }
 
     [void] setCountThatFallwithinDeviations() {
+        $this.playerCountThatFallWithinOneSTD = 0
+        $this.playerCountThatFallWithinTwoSTD = 0
+        $this.playerCountThatFallWithinThreeSTD = 0
+        $this.restrictedPlayerCountThatFallWithinOneSTD = 0
+        $this.restrictedPlayerCountThatFallWithinTwoSTD = 0
+        $this.restrictedPlayerCountThatFallWithinThreeSTD = 0
+
         foreach($player in $this.playerList) {
             if($player.totalSeasonAvg -gt $this.oneStandardDeviationFromMean) {
                 $this.playerCountThatFallWithinOneSTD++ 
@@ -163,6 +173,15 @@ class Position {
             }
             if($player.totalSeasonAvg -gt $this.threeStandardDeviationsFromMean) {
                 $this.playerCountThatFallWithinThreeSTD++ 
+            }
+            if($player.totalSeasonAvg -gt $this.restrictedOneStandardDeviationFromMean) {
+                $this.restrictedPlayerCountThatFallWithinOneSTD++
+            }
+            if($player.totalSeasonAvg -gt $this.restrictedTwoStandardDeviationsFromMean) {
+                $this.restrictedPlayerCountThatFallWithinTwoSTD++
+            }
+            if($player.totalSeasonAvg -gt $this.restrictedThreeStandardDeviationsFromMean) {
+                $this.restrictedPlayerCountThatFallWithinThreeSTD++
             }
         }
     }
@@ -181,7 +200,7 @@ class League {
     [int]$totalNumberOfTeams
 
     League([System.Collections.Generic.List[Player]]$playerList, [int]$totalNumberOfTeams) {
-        $this.Initialize()
+        $this.Initialize($totalNumberOfTeams)
         $this.totalNumberOfTeams = $totalNumberOfTeams
         foreach($player in $playerList) {
             switch($Player.positionName) {
@@ -238,16 +257,16 @@ class League {
         $this.coachPosition.buildStats()
     }
 
-    [void] Initialize() {
-        $this.qbPosition = [Position]::new("QB", 2, 1)
-        $this.rbPosition = [Position]::new("RB", 4, 2)
-        $this.wrPosition = [Position]::new("WR", 4, 2)
-        $this.tePosition = [Position]::new("TE", 2, 1)
-        $this.pkPosition = [Position]::new("PK", 2, 1)
-        $this.offPosition = [Position]::new("Off", 2, 1)
-        $this.defPosition = [Position]::new("Def", 2, 1)
-        $this.stPosition = [Position]::new("ST", 2, 1)
-        $this.coachPosition = [Position]::new("Coach", 2, 1)
+    [void] Initialize([int]$numberOfTeams) {
+        $this.qbPosition = [Position]::new("QB", 2, 1, $numberOfTeams)
+        $this.rbPosition = [Position]::new("RB", 4, 2, $numberOfTeams)
+        $this.wrPosition = [Position]::new("WR", 4, 2, $numberOfTeams)
+        $this.tePosition = [Position]::new("TE", 2, 1, $numberOfTeams)
+        $this.pkPosition = [Position]::new("PK", 2, 1, $numberOfTeams)
+        $this.offPosition = [Position]::new("Off", 2, 1, $numberOfTeams)
+        $this.defPosition = [Position]::new("Def", 2, 1, $numberOfTeams)
+        $this.stPosition = [Position]::new("ST", 2, 1, $numberOfTeams)
+        $this.coachPosition = [Position]::new("Coach", 2, 1, $numberOfTeams)
     }
 }
 
