@@ -4,7 +4,7 @@ param (
     ,[int]$regularSeasonEnd=14
     ,[int]$playoffSeasonEnd=17
     ,[int]$totalWeeksOfStats=18
-    ,[int]$totalNumberOfTeams=16
+    ,[decimal]$totalNumberOfTeams=16.00
 )
 
 class Statistics {
@@ -68,15 +68,15 @@ class Position {
     [decimal]$standardDeviation
     [System.Collections.Generic.List[Player]]$playerList
     [System.Collections.Generic.List[decimal]]$totalPointList
-    [int]$numberDrafted
-    [int]$numberStarted
-    [int]$teamCount
+    [decimal]$numberDrafted
+    [decimal]$numberStarted
+    [decimal]$teamCount
 
     Position() {
         $this.Initialize()
     }
 
-    Position([string]$name, [int]$numberDrafted, [int]$numberStarted, [int]$teamCount) {
+    Position([string]$name, [decimal]$numberDrafted, [decimal]$numberStarted, [decimal]$teamCount) {
         $this.Initialize()
         $this.name = $name
         $this.numberDrafted = $numberDrafted
@@ -140,9 +140,9 @@ class League {
     [Position]$defPosition
     [Position]$stPosition
     [Position]$coachPosition
-    [int]$totalNumberOfTeams
+    [decimal]$totalNumberOfTeams
 
-    League([System.Collections.Generic.List[Player]]$playerList, [int]$totalNumberOfTeams) {
+    League([System.Collections.Generic.List[Player]]$playerList, [decimal]$totalNumberOfTeams) {
         $this.Initialize($totalNumberOfTeams)
         $this.totalNumberOfTeams = $totalNumberOfTeams
         foreach($player in $playerList) {
@@ -191,15 +191,15 @@ class League {
     }
 
     [void] Initialize([int]$numberOfTeams) {
-        $this.qbPosition = [Position]::new("QB", 2, 1, $numberOfTeams)
-        $this.rbPosition = [Position]::new("RB", 4, 2, $numberOfTeams)
-        $this.wrPosition = [Position]::new("WR", 4, 2, $numberOfTeams)
-        $this.tePosition = [Position]::new("TE", 2, 1, $numberOfTeams)
-        $this.pkPosition = [Position]::new("PK", 2, 1, $numberOfTeams)
-        $this.offPosition = [Position]::new("Off", 2, 1, $numberOfTeams)
-        $this.defPosition = [Position]::new("Def", 2, 1, $numberOfTeams)
-        $this.stPosition = [Position]::new("ST", 2, 1, $numberOfTeams)
-        $this.coachPosition = [Position]::new("Coach", 2, 1, $numberOfTeams)
+        $this.qbPosition = [Position]::new("QB", 2.00, 1.00, $numberOfTeams)
+        $this.rbPosition = [Position]::new("RB", 4.00, 2.00, $numberOfTeams)
+        $this.wrPosition = [Position]::new("WR", 4.00, 2.00, $numberOfTeams)
+        $this.tePosition = [Position]::new("TE", 2.00, 1.00, $numberOfTeams)
+        $this.pkPosition = [Position]::new("PK", 2.00, 1.00, $numberOfTeams)
+        $this.offPosition = [Position]::new("Off", 2.00, 1.00, $numberOfTeams)
+        $this.defPosition = [Position]::new("Def", 2.00, 1.00, $numberOfTeams)
+        $this.stPosition = [Position]::new("ST", 2.00, 1.00, $numberOfTeams)
+        $this.coachPosition = [Position]::new("Coach", 2.00, 1.00, $numberOfTeams)
     }
 }
 
