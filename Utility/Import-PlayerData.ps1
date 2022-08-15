@@ -102,6 +102,7 @@ class Position {
         $this.setPositionAverage($this.totalPointList)
         $this.setPositionVariance($this.totalPointList)
         $this.setPositionStandardDeviation($this.totalPointList)
+        $this.setMeanAndSTDForAllPlayers($this.playerList)
     }
 
     [void] setPositionAverage([System.Collections.Generic.List[decimal]]$pointList) {
@@ -118,6 +119,14 @@ class Position {
 
     [decimal] getStandardDeviations([System.Collections.Generic.List[decimal]]$pointList, [decimal]$distance) {
         return [Statistics]::getStandardDeviationsFromMean($pointList, $distance)
+    }
+
+    [void] setMeanAndSTDForAllPlayers([System.Collections.Generic.List[Player]]$playerList) {
+        foreach($player in $playerList) {
+            $player.positionAverage = $this.average
+            $player.positionSTD = $this.standardDeviation
+            $player.calculateDistanceFromMeanAndSTDPercentage()
+        }
     }
 }
 
@@ -222,6 +231,10 @@ class Player {
     [decimal]$regularSeasonStandardDeviation
     [decimal]$playoffSeasonStandardDeviation
     [decimal]$totalSeasonStandardDeviation
+    [decimal]$positionAverage
+    [decimal]$positionSTD
+    [decimal]$averageDistanceFromMean
+    [decimal]$stdDeviationPercentage
     
     Player([string]$rank, [string]$fullPlayerName, [decimal]$points, [decimal]$average, [string]$owner, [int]$byeweek, [int]$salary, [System.Collections.Generic.List[decimal]]$seasonPointList, [int]$regularSeasonEnd, [int]$playoffSeasonEnd, [int]$totalWeeksOfStats) {
         [System.Collections.Generic.List[decimal]]$this.seasonPointList = New-Object -TypeName "System.Collections.Generic.List[decimal]"
@@ -307,6 +320,11 @@ class Player {
     [decimal] getStandardDeviationOfList([System.Collections.Generic.List[decimal]]$list) {
         $result = [Statistics]::getStandardDeviation($list)
         return $result
+    }
+
+    [void] calculateDistanceFromMeanAndSTDPercentage() {
+        $this.averageDistanceFromMean = $this.totalSeasonAvg - $this.positionAverage
+        $this.stdDeviationPercentage = $this.averageDistanceFromMean / $this.positionSTD
     }
 
 }
