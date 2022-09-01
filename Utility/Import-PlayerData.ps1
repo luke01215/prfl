@@ -71,6 +71,7 @@ class Position {
     [decimal]$numberDrafted
     [decimal]$numberStarted
     [decimal]$teamCount
+    [System.Collections.Generic.List[decimal]]$STDRanking
 
     Position() {
         $this.Initialize()
@@ -87,6 +88,7 @@ class Position {
     [void] Initialize() {
         $this.playerList = New-Object -TypeName "System.Collections.Generic.List[Player]"
         $this.totalPointList = New-Object -TypeName "System.Collections.Generic.List[decimal]"
+        $this.STDRanking = New-Object -TypeName "System.Collections.Generic.List[decimal]"
     }
 
     [void] buildTotalPointList() {
@@ -200,6 +202,77 @@ class League {
         $this.defPosition = [Position]::new("Def", 2.00, 1.00, $numberOfTeams)
         $this.stPosition = [Position]::new("ST", 2.00, 1.00, $numberOfTeams)
         $this.coachPosition = [Position]::new("Coach", 2.00, 1.00, $numberOfTeams)
+    }
+
+    [void]BuildSTDRankingForPlayerCount([string]$positionName, [int]$numberOfRankingGroups) {
+        switch($positionName) {
+            "QB" {
+                $count = $this.qbPosition.numberDrafted * $this.qbPosition.teamCount
+                for($i = 0; $i -lt $count; $i++) {
+                    $player = $this.qbPosition.playerList[$i]
+                    $this.qbPosition.STDRanking.Add($player.stdDeviationPercentage)
+                }
+            }
+            "RB" {
+                $count = $this.rbPosition.numberDrafted * $this.rbPosition.teamCount
+                for($i = 0; $i -lt $count; $i++) {
+                    $player = $this.rbPosition.playerList[$i]
+                    $this.rbPosition.STDRanking.Add($player.stdDeviationPercentage)
+                }
+            }
+            "WR" {
+                $count = $this.wrPosition.numberDrafted * $this.wrPosition.teamCount
+                for($i = 0; $i -lt $count; $i++) {
+                    $player = $this.wrPosition.playerList[$i]
+                    $this.wrPosition.STDRanking.Add($player.stdDeviationPercentage)
+                }
+            }
+            "TE" {
+                $count = $this.tePosition.numberDrafted * $this.tePosition.teamCount
+                for($i = 0; $i -lt $count; $i++) {
+                    $player = $this.tePosition.playerList[$i]
+                    $this.tePosition.STDRanking.Add($player.stdDeviationPercentage)
+                }
+            }
+            "PK" {
+                $count = $this.pkPosition.numberDrafted * $this.pkPosition.teamCount
+                for($i = 0; $i -lt $count; $i++) {
+                    $player = $this.pkPosition.playerList[$i]
+                    $this.pkPosition.STDRanking.Add($player.stdDeviationPercentage)
+                }
+            }
+            "Off" {
+                $count = $this.offPosition.numberDrafted * $this.offPosition.teamCount
+                for($i = 0; $i -lt $count; $i++) {
+                    $player = $this.offPosition.playerList[$i]
+                    $this.offPosition.STDRanking.Add($player.stdDeviationPercentage)
+                }
+            }
+            "Def" {
+                $count = $this.defPosition.numberDrafted * $this.defPosition.teamCount
+                for($i = 0; $i -lt $count; $i++) {
+                    $player = $this.defPosition.playerList[$i]
+                    $this.defPosition.STDRanking.Add($player.stdDeviationPercentage)
+                }
+            }
+            "ST" {
+                $count = $this.stPosition.numberDrafted * $this.stPosition.teamCount
+                for($i = 0; $i -lt $count; $i++) {
+                    $player = $this.stPosition.playerList[$i]
+                    $this.stPosition.STDRanking.Add($player.stdDeviationPercentage)
+                }
+            }
+            "Coach" {
+                $count = $this.coachPosition.numberDrafted * $this.coachPosition.teamCount
+                for($i = 0; $i -lt $count; $i++) {
+                    $player = $this.coachPosition.playerList[$i]
+                    $this.coachPosition.STDRanking.Add($player.stdDeviationPercentage)
+                }
+            }
+            else {
+                Write-Error "Position[$positionName] not defined in League"
+            }
+        }
     }
 }
 
@@ -345,6 +418,15 @@ try {
         }
     }
     $league = [League]::new($playerList, $totalNumberOfTeams)
+    $league.BuildSTDRankingForPlayerCount("QB", 4)
+    $league.BuildSTDRankingForPlayerCount("RB", 4)
+    $league.BuildSTDRankingForPlayerCount("WR", 4)
+    $league.BuildSTDRankingForPlayerCount("TE", 4)
+    $league.BuildSTDRankingForPlayerCount("PK", 4)
+    $league.BuildSTDRankingForPlayerCount("Off", 4)
+    $league.BuildSTDRankingForPlayerCount("Def", 4)
+    $league.BuildSTDRankingForPlayerCount("ST", 4)
+    $league.BuildSTDRankingForPlayerCount("Coach", 4)
     Write-Output "Test"
 
 }
